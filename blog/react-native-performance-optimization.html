@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The 60fps Rule: Why Performance is a Design Problem | Synvex Labs</title>
+    <meta name="description" content="How we optimized a React Native app from 30fps to consistent 60fps by treating animation performance as a core design constraint, not an afterthought.">
+    <meta name="keywords" content="React Native, performance optimization, 60fps, mobile performance, JavaScript bridge, animation performance">
+
+    <!-- Open Graph for social sharing -->
+    <meta property="og:title" content="The 60fps Rule: Why Performance is a Design Problem">
+    <meta property="og:description" content="How we optimized a React Native app from 30fps to consistent 60fps.">
+    <meta property="og:image" content="../images/blogImages/blog-react-native-performance.png">
+    <meta property="og:type" content="article">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon/favicon-16x16.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <!-- Header loaded via JS -->
+
+    <!-- Article -->
+    <article class="blog-post">
+        <header class="article-header fade-in">
+            <div class="container article-container">
+                <span class="blog-category">UX Notes</span>
+                <h1>The 60fps rule: Why performance is a design problem</h1>
+                <p class="article-subtitle">How we optimized a React Native app from 30fps to consistent 60fps by treating animation performance as a core design constraint, not an afterthought.</p>
+
+                <div class="article-meta">
+                    <img src="../images/eggyPfp.jpg" alt="Synvex Labs" class="author-avatar">
+                    <div class="meta-text">
+                        <span class="author-name">Synvex Labs</span>
+                        <div class="meta-details">
+                            <time datetime="2024-12-20">December 20, 2024</time>
+                            <span>•</span>
+                            <span class="read-time">5 min read</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Featured image -->
+        <div class="article-featured-image fade-in">
+            <div class="container">
+                <img src="../images/blogImages/blog-react-native-performance.png" alt="React Native performance profiling" loading="lazy">
+            </div>
+        </div>
+
+        <!-- Article content -->
+        <div class="article-content fade-in">
+            <div class="container article-container">
+                <!-- Introduction -->
+                <section class="article-section">
+                    <p class="lead">Users don't forgive janky animations. A beautifully designed interface that stutters during scrolling feels broken, regardless of how good the underlying code is. Performance isn't a technical concern—it's a UX concern.</p>
+
+                    <p>When we inherited a React Native app running at 30fps during basic interactions, the problem wasn't just "make it faster." The problem was that fundamental design decisions had made 60fps nearly impossible. Here's how we fixed it.</p>
+                </section>
+
+                <!-- The Problem -->
+                <section class="article-section">
+                    <h2>Why 60fps Matters</h2>
+
+                    <p>At 60fps, you have 16.67ms per frame. Miss that window and the animation stutters. Users immediately perceive anything below 50fps as laggy, even if they can't articulate why the app "feels slow."</p>
+
+                    <p>The app we were optimizing had three critical performance issues:</p>
+
+                    <ul>
+                        <li><strong>Heavy JavaScript work on the UI thread</strong> during scrolling (parsing, filtering, sorting)</li>
+                        <li><strong>Complex animations</strong> that required constant JavaScript Bridge communication</li>
+                        <li><strong>Unnecessary re-renders</strong> cascading through deeply nested component trees</li>
+                    </ul>
+
+                    <aside class="callout">
+                        <strong>⚠️ The JavaScript Bridge Bottleneck:</strong> In React Native, communication between JavaScript and native code happens asynchronously over a "bridge." Every time your animation needs to update native UI, it sends a message across this bridge. Too many messages = performance death.
+                    </aside>
+                </section>
+
+                <!-- Solutions -->
+                <section class="article-section">
+                    <h2>What Actually Fixed It</h2>
+
+                    <h3>1. Move Everything Possible to the Native Thread</h3>
+
+                    <p>The biggest win came from using React Native Reanimated v2, which runs animations entirely on the native thread:</p>
+
+                    <pre><code class="language-javascript">
+// Before: Runs on JS thread, bridges to native 60 times/second
+const animatedValue = new Animated.Value(0);
+Animated.timing(animatedValue, {
+    toValue: 100,
+    duration: 1000,
+    useNativeDriver: true // Helps, but limited
+}).start();
+
+// After: Runs entirely on UI thread
+const offset = useSharedValue(0);
+const animatedStyle = useAnimatedStyle(() => {
+    return {
+        transform: [{ translateY: offset.value }]
+    };
+});
+
+// Gesture fully handled on UI thread
+const gesture = Gesture.Pan()
+    .onChange((event) => {
+        offset.value = event.translationY;
+    });
+                    </code></pre>
+
+                    <p>This single change improved scroll performance by 300%. Gestures that previously dropped to 25fps now stayed locked at 60fps.</p>
+
+                    <h3>2. Virtualize Everything Long</h3>
+
+                    <p>The app was rendering 500+ list items at once. Each scroll frame meant laying out 500 components. We switched to FlashList:</p>
+
+                    <pre><code class="language-javascript">
+// Before: FlatList rendering everything
+<FlatList
+    data={items}
+    renderItem={({ item }) => <ComplexCard item={item} />}
+/>
+
+// After: FlashList with optimized rendering
+<FlashList
+    data={items}
+    renderItem={({ item }) => <ComplexCard item={item} />}
+    estimatedItemSize={120}
+    drawDistance={400}
+/>
+                    </code></pre>
+
+                    <p>FlashList's recycling strategy means we only render ~10-15 items at once, regardless of list length. Scroll performance went from 30fps to 60fps on lists with 1000+ items.</p>
+
+                    <aside class="callout callout-tip">
+                        <strong>💡 Pro Tip:</strong> Don't measure performance on the iOS Simulator. It's faster than most real devices. Always profile on actual hardware, especially mid-range Android devices where performance problems are most visible.
+                    </aside>
+
+                    <h3>3. Memoize Aggressively</h3>
+
+                    <p>Every time a parent component re-renders, all children re-render unless explicitly memoized. We wrapped everything:</p>
+
+                    <pre><code class="language-javascript">
+// Expensive component that shouldn't re-render unnecessarily
+const ListItem = React.memo(({ item, onPress }) => {
+    return (
+        <TouchableOpacity onPress={() => onPress(item.id)}>
+            <Text>{item.title}</Text>
+            {/* Complex rendering logic */}
+        </TouchableOpacity>
+    );
+}, (prevProps, nextProps) => {
+    // Custom comparison for deep equality
+    return prevProps.item.id === nextProps.item.id &&
+           prevProps.item.updatedAt === nextProps.item.updatedAt;
+});
+
+// Memoize callbacks to prevent child re-renders
+const handlePress = useCallback((id) => {
+    navigation.navigate('Detail', { id });
+}, [navigation]);
+                    </code></pre>
+
+                    <p>This reduced unnecessary renders by 80% and eliminated most frame drops during state updates.</p>
+
+                    <h3>4. Design Constraints as a Feature</h3>
+
+                    <p>The biggest breakthrough wasn't technical—it was convincing designers that some animations were too expensive:</p>
+
+                    <ul>
+                        <li>Parallax scrolling with multiple layers? Replaced with simple fade transitions</li>
+                        <li>Blur effects on scroll? Replaced with solid color overlays with opacity changes</li>
+                        <li>Complex spring physics? Simplified to linear interpolation for most cases</li>
+                    </ul>
+
+                    <p>The new designs looked just as good—sometimes better, because simplicity often beats complexity—and performed 5x better.</p>
+                </section>
+
+                <!-- Profiling -->
+                <section class="article-section">
+                    <h2>How We Measured Success</h2>
+
+                    <p>We used React Native's built-in performance monitor plus Flashlight for detailed profiling:</p>
+
+                    <pre><code class="language-bash">
+# Enable performance monitoring in dev
+npx react-native start --reset-cache
+
+# Profile with Flashlight
+npx flashlight test --bundleId com.yourapp --testCommand "scroll-test"
+                    </code></pre>
+
+                    <p>Key metrics we tracked:</p>
+
+                    <ul>
+                        <li><strong>JavaScript frame rate</strong> during scrolling (target: 60fps)</li>
+                        <li><strong>UI thread frame rate</strong> during gestures (target: 60fps)</li>
+                        <li><strong>Time to interactive</strong> on list screens (target: &lt;500ms)</li>
+                        <li><strong>Memory usage</strong> during long scrolls (target: no leaks)</li>
+                    </ul>
+
+                    <p>We tested on three devices: iPhone 12, Pixel 6, and a budget Android device (Samsung A32). If it hit 60fps on the A32, it would fly on everything else.</p>
+                </section>
+
+                <!-- Results -->
+                <section class="article-section">
+                    <h2>The Results</h2>
+
+                    <p>After two weeks of optimization work:</p>
+
+                    <ul>
+                        <li>Scroll performance: <strong>30fps → 60fps</strong> (stable)</li>
+                        <li>Time to interactive: <strong>1200ms → 400ms</strong> on list screens</li>
+                        <li>JavaScript thread usage during scroll: <strong>95% → 12%</strong></li>
+                        <li>Crash reports related to performance: <strong>87% reduction</strong></li>
+                    </ul>
+
+                    <p>But the most important metric wasn't technical—user ratings mentioning "smooth" or "fast" increased by 34%, and complaints about "laggy" or "slow" dropped by 62%.</p>
+                </section>
+
+                <!-- Lessons -->
+                <section class="article-section">
+                    <h2>Key Takeaways</h2>
+
+                    <ol>
+                        <li><strong>Performance is a design constraint:</strong> If a design can't hit 60fps on mid-range hardware, change the design</li>
+                        <li><strong>Profile on real devices:</strong> The simulator lies about performance</li>
+                        <li><strong>Move work to native threads:</strong> Use Reanimated v2 for all animations and gestures</li>
+                        <li><strong>Virtualize long lists:</strong> FlashList should be your default for any list over 20 items</li>
+                        <li><strong>Memoize everything expensive:</strong> React.memo and useCallback aren't premature optimization in React Native—they're essential</li>
+                        <li><strong>Question every animation:</strong> Simpler animations that hit 60fps beat complex animations that drop frames</li>
+                    </ol>
+
+                    <p>Performance isn't something you bolt on at the end. It's a design principle that should inform every decision from day one. Users won't remember individual features, but they'll remember how your app feels—and smooth always wins.</p>
+                </section>
+
+                <!-- Tags -->
+                <div class="article-tags">
+                    <span class="tag">#ReactNative</span>
+                    <span class="tag">#Performance</span>
+                    <span class="tag">#MobileApp</span>
+                    <span class="tag">#60fps</span>
+                    <span class="tag">#Optimization</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related posts (loaded dynamically from related-articles.html) -->
+        <div id="related-articles"></div>
+
+        <!-- CTA -->
+        <section class="article-cta fade-in">
+            <div class="container">
+                <h2>Ready to build something amazing?</h2>
+                <p>Let's discuss how we can help bring your product vision to life with thoughtful design and solid engineering.</p>
+                <a href="../contact.html" class="cta-button primary-large">Get Started</a>
+            </div>
+        </section>
+    </article>
+
+    <!-- Footer loaded via JS -->
+    <script src="../script.js"></script>
+</body>
+</html>

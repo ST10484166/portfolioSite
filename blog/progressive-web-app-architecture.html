@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building PWAs That Feel Native Without the Overhead | Synvex Labs</title>
+    <meta name="description" content="Service workers, smart caching strategies, and the architecture decisions that let us ship a web app that works offline and installs like native.">
+    <meta name="keywords" content="Progressive Web Apps, PWA, service workers, offline-first, web development, caching strategies">
+
+    <!-- Open Graph for social sharing -->
+    <meta property="og:title" content="Building PWAs That Feel Native Without the Overhead">
+    <meta property="og:description" content="Service workers, smart caching strategies, and offline-first architecture for modern web apps.">
+    <meta property="og:image" content="../images/blogImages/blog-pwa-architecture.png">
+    <meta property="og:type" content="article">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon/favicon-16x16.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <!-- Header loaded via JS -->
+
+    <!-- Article -->
+    <article class="blog-post">
+        <header class="article-header fade-in">
+            <div class="container article-container">
+                <span class="blog-category">Technical</span>
+                <h1>Building PWAs that feel native without the overhead</h1>
+                <p class="article-subtitle">Service workers, smart caching strategies, and the architecture decisions that let us ship a web app that works offline and installs like native.</p>
+
+                <div class="article-meta">
+                    <img src="../images/eggyPfp.jpg" alt="Synvex Labs" class="author-avatar">
+                    <div class="meta-text">
+                        <span class="author-name">Synvex Labs</span>
+                        <div class="meta-details">
+                            <time datetime="2024-12-12">December 12, 2024</time>
+                            <span>•</span>
+                            <span class="read-time">10 min read</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Featured image -->
+        <div class="article-featured-image fade-in">
+            <div class="container">
+                <img src="../images/blogImages/blog-pwa-architecture.jpg" alt="Progressive Web App architecture diagram" loading="lazy">
+            </div>
+        </div>
+
+        <!-- Article content -->
+        <div class="article-content fade-in">
+            <div class="container article-container">
+                <!-- Introduction -->
+                <section class="article-section">
+                    <p class="lead">Progressive Web Apps promise the best of both worlds: the reach of the web with the experience of native apps. In practice, most PWAs feel like websites pretending to be apps. But when done right, PWAs can be indistinguishable from native—and dramatically easier to maintain.</p>
+
+                    <p>We recently shipped a PWA that works fully offline, installs with one tap, and gets regular usage from 50K+ users who often don't realize it's a web app. Here's how we built it.</p>
+                </section>
+
+                <!-- Core Architecture -->
+                <section class="article-section">
+                    <h2>The Core Architecture Decisions</h2>
+
+                    <h3>1. Offline-First by Default</h3>
+
+                    <p>Most PWAs treat offline mode as an edge case. We designed for offline-first from day one. Every feature had to work without a network connection:</p>
+
+                    <ul>
+                        <li>Service Worker intercepts all network requests</li>
+                        <li>IndexedDB stores all user data locally</li>
+                        <li>Background sync queues actions when offline</li>
+                        <li>Network is treated as a progressive enhancement, not a requirement</li>
+                    </ul>
+
+                    <p>This architecture shift changed everything. Instead of "what happens if the network fails?", we asked "what value can we provide with zero network?"</p>
+
+                    <aside class="callout callout-tip">
+                        <strong>💡 Mental Model Shift:</strong> Think of your app as a local-first application that occasionally syncs with a server, not a website that caches some assets. This fundamentally changes your architecture decisions.
+                    </aside>
+
+                    <h3>2. Smart Service Worker Caching</h3>
+
+                    <p>We use a hybrid caching strategy based on resource type:</p>
+
+                    <pre><code class="language-javascript">
+// service-worker.js
+const CACHE_VERSION = 'v1.2.0';
+const STATIC_CACHE = `static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
+const API_CACHE = `api-${CACHE_VERSION}`;
+
+// Install: Cache essential static assets
+self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open(STATIC_CACHE).then((cache) => {
+            return cache.addAll([
+                '/',
+                '/styles.css',
+                '/app.js',
+                '/offline.html',
+                '/manifest.json'
+            ]);
+        })
+    );
+});
+
+// Fetch: Different strategies for different resources
+self.addEventListener('fetch', (event) => {
+    const { request } = event;
+    const url = new URL(request.url);
+
+    // API requests: Network-first, fall back to cache
+    if (url.pathname.startsWith('/api/')) {
+        event.respondWith(networkFirstStrategy(request));
+    }
+    // Static assets: Cache-first
+    else if (request.destination === 'style' ||
+             request.destination === 'script' ||
+             request.destination === 'image') {
+        event.respondWith(cacheFirstStrategy(request));
+    }
+    // HTML: Stale-while-revalidate
+    else {
+        event.respondWith(staleWhileRevalidateStrategy(request));
+    }
+});
+
+async function networkFirstStrategy(request) {
+    try {
+        const networkResponse = await fetch(request);
+        const cache = await caches.open(API_CACHE);
+        cache.put(request, networkResponse.clone());
+        return networkResponse;
+    } catch (error) {
+        const cachedResponse = await caches.match(request);
+        return cachedResponse || new Response(
+            JSON.stringify({ error: 'Offline', cached: false }),
+            { status: 503, headers: { 'Content-Type': 'application/json' } }
+        );
+    }
+}
+
+async function cacheFirstStrategy(request) {
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) return cachedResponse;
+
+    try {
+        const networkResponse = await fetch(request);
+        const cache = await caches.open(DYNAMIC_CACHE);
+        cache.put(request, networkResponse.clone());
+        return networkResponse;
+    } catch (error) {
+        // Return offline fallback for images
+        if (request.destination === 'image') {
+            return caches.match('/offline-image.svg');
+        }
+    }
+}
+                    </code></pre>
+
+                    <p>This strategy means users get instant responses from cache while we update in the background. The app feels native-fast because most requests never hit the network.</p>
+                </section>
+
+                <!-- Data Sync -->
+                <section class="article-section">
+                    <h2>Handling Data Synchronization</h2>
+
+                    <h3>Background Sync for Offline Actions</h3>
+
+                    <p>When users perform actions offline, we queue them using the Background Sync API:</p>
+
+                    <pre><code class="language-javascript">
+// Queue an action when offline
+async function saveItem(item) {
+    // Save to IndexedDB immediately
+    await db.items.put(item);
+
+    // Queue sync when back online
+    if ('serviceWorker' in navigator && 'sync' in registration) {
+        try {
+            await registration.sync.register('sync-items');
+        } catch (error) {
+            // Fallback: immediate retry
+            await syncItems();
+        }
+    }
+}
+
+// Service Worker: Handle background sync
+self.addEventListener('sync', (event) => {
+    if (event.tag === 'sync-items') {
+        event.waitUntil(syncPendingItems());
+    }
+});
+
+async function syncPendingItems() {
+    const pendingItems = await db.items
+        .where('syncStatus')
+        .equals('pending')
+        .toArray();
+
+    for (const item of pendingItems) {
+        try {
+            await fetch('/api/items', {
+                method: 'POST',
+                body: JSON.stringify(item),
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            // Mark as synced
+            await db.items.update(item.id, { syncStatus: 'synced' });
+        } catch (error) {
+            // Will retry on next sync event
+            console.error('Sync failed:', error);
+        }
+    }
+}
+                    </code></pre>
+
+                    <h3>Conflict Resolution</h3>
+
+                    <p>When the same data changes both locally and on the server, we use timestamp-based last-write-wins with user notification:</p>
+
+                    <pre><code class="language-javascript">
+async function mergeChanges(localItem, serverItem) {
+    // Simple last-write-wins
+    if (localItem.updatedAt > serverItem.updatedAt) {
+        // Local is newer, push to server
+        await syncToServer(localItem);
+        return localItem;
+    } else if (serverItem.updatedAt > localItem.updatedAt) {
+        // Server is newer, update local
+        await db.items.put(serverItem);
+        return serverItem;
+    }
+
+    // Same timestamp but different content = conflict
+    if (JSON.stringify(localItem) !== JSON.stringify(serverItem)) {
+        // Notify user and let them choose
+        await showConflictResolutionUI(localItem, serverItem);
+    }
+
+    return localItem;
+}
+                    </code></pre>
+
+                    <aside class="callout">
+                        <strong>⚠️ Conflict Resolution is Hard:</strong> We started with automatic merging, but users hated losing data. Manual conflict resolution with a clear UI is slower but builds more trust.
+                    </aside>
+                </section>
+
+                <!-- Installation -->
+                <section class="article-section">
+                    <h2>Making Installation Seamless</h2>
+
+                    <p>The install experience makes or breaks PWA adoption. We improved our install rate from 8% to 32% with these changes:</p>
+
+                    <h3>1. Smart Install Prompt Timing</h3>
+
+                    <pre><code class="language-javascript">
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent automatic prompt
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // Show install button after user has used app for 5 minutes
+    setTimeout(() => {
+        if (hasEngagedWithApp()) {
+            showInstallButton();
+        }
+    }, 300000);
+});
+
+function showInstallButton() {
+    const installBtn = document.getElementById('install-btn');
+    installBtn.style.display = 'block';
+
+    installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+
+            if (outcome === 'accepted') {
+                trackEvent('pwa_installed');
+            }
+
+            deferredPrompt = null;
+        }
+    });
+}
+                    </code></pre>
+
+                    <h3>2. Manifest That Works Everywhere</h3>
+
+                    <pre><code class="language-json">
+{
+    "name": "Your App Name",
+    "short_name": "App",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0a0a0f",
+    "theme_color": "#6366f1",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "/icons/icon-72x72.png",
+            "sizes": "72x72",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
+                    </code></pre>
+
+                    <p>The `maskable` icon is crucial for Android—without it, your icon looks cropped or weird on many devices.</p>
+                </section>
+
+                <!-- Performance -->
+                <section class="article-section">
+                    <h2>Performance Optimization</h2>
+
+                    <p>PWAs need to load fast to feel native. Our optimization checklist:</p>
+
+                    <ul>
+                        <li><strong>Code splitting:</strong> Load only what's needed for the current view</li>
+                        <li><strong>Route-based chunking:</strong> Each route is its own bundle</li>
+                        <li><strong>Lazy load images:</strong> IntersectionObserver for below-fold images</li>
+                        <li><strong>Preload critical resources:</strong> Use `<link rel="preload">` for fonts and critical CSS</li>
+                        <li><strong>Compress everything:</strong> Brotli compression on all text assets</li>
+                    </ul>
+
+                    <p>Results:</p>
+
+                    <ul>
+                        <li>First Contentful Paint: &lt;1.2s (3G connection)</li>
+                        <li>Time to Interactive: &lt;3.5s</li>
+                        <li>Lighthouse PWA score: 100/100</li>
+                    </ul>
+                </section>
+
+                <!-- Challenges -->
+                <section class="article-section">
+                    <h2>The Hard Parts</h2>
+
+                    <h3>iOS Limitations</h3>
+
+                    <p>iOS support for PWAs is... complicated. Major limitations we had to work around:</p>
+
+                    <ul>
+                        <li>No Background Sync API (we poll when app is opened)</li>
+                        <li>No push notifications (we use a hybrid approach with a companion native app for users who want notifications)</li>
+                        <li>50MB cache limit (we aggressively clean old caches)</li>
+                        <li>Data can be cleared if device storage is low (we warn users)</li>
+                    </ul>
+
+                    <h3>Browser Inconsistencies</h3>
+
+                    <p>What works in Chrome might not work in Safari or Firefox. We test on:</p>
+
+                    <ul>
+                        <li>Chrome Android (best support)</li>
+                        <li>Safari iOS (most limitations)</li>
+                        <li>Firefox (good support, some quirks)</li>
+                        <li>Samsung Internet (surprisingly good)</li>
+                    </ul>
+                </section>
+
+                <!-- Lessons -->
+                <section class="article-section">
+                    <h2>Key Learnings</h2>
+
+                    <ol>
+                        <li><strong>Design for offline-first:</strong> Network should be an enhancement, not a requirement</li>
+                        <li><strong>Use appropriate caching strategies:</strong> Different resources need different approaches</li>
+                        <li><strong>Test on real devices:</strong> Service Worker behavior differs significantly across browsers</li>
+                        <li><strong>Handle sync failures gracefully:</strong> Users will be offline more than you think</li>
+                        <li><strong>Time install prompts carefully:</strong> Show it after users are engaged, not immediately</li>
+                        <li><strong>Accept iOS limitations:</strong> Build for the best experience on Chrome/Android, then progressively enhance for iOS</li>
+                        <li><strong>Monitor cache sizes:</strong> Aggressive caching can consume storage quickly</li>
+                    </ol>
+
+                    <p>PWAs aren't a silver bullet—they can't replace native apps for everything. But for content-focused apps, utilities, and tools that don't need deep platform integration, PWAs offer a compelling alternative: one codebase, near-instant updates, and no app store gatekeepers.</p>
+
+                    <p>When done right, PWAs feel native. And that's the point.</p>
+                </section>
+
+                <!-- Tags -->
+                <div class="article-tags">
+                    <span class="tag">#PWA</span>
+                    <span class="tag">#ServiceWorker</span>
+                    <span class="tag">#OfflineFirst</span>
+                    <span class="tag">#WebDevelopment</span>
+                    <span class="tag">#Performance</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related posts (loaded dynamically from related-articles.html) -->
+        <div id="related-articles"></div>
+
+        <!-- CTA -->
+        <section class="article-cta fade-in">
+            <div class="container">
+                <h2>Ready to build something amazing?</h2>
+                <p>Let's discuss how we can help bring your product vision to life with thoughtful design and solid engineering.</p>
+                <a href="../contact.html" class="cta-button primary-large">Get Started</a>
+            </div>
+        </section>
+    </article>
+
+    <!-- Footer loaded via JS -->
+    <script src="../script.js"></script>
+</body>
+</html>

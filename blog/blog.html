@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - From the Lab | Synvex Labs</title>
+    <meta name="description" content="Technical insights, design patterns, and lessons learned from building digital products at Synvex Labs.">
+    <meta name="keywords" content="mobile development, web development, design patterns, React Native, PWA, dark mode, UX design">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../images/favicon/apple-touch-icon.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <!-- Header loaded via JS -->
+
+    <section class="page-header fade-in">
+        <div class="container">
+            <h1>From the Lab</h1>
+            <p class="section-subtitle">Technical insights, design patterns, and lessons learned from building digital products that people love to use.</p>
+        </div>
+    </section>
+
+    <section class="blog-listing fade-in">
+        <div class="container">
+
+            <!-- Category filters -->
+            <div class="category-filters">
+                <button class="filter-btn active" data-category="all">All</button>
+                <button class="filter-btn" data-category="UI">UI</button>
+                <button class="filter-btn" data-category="UX">UX</button>
+                <button class="filter-btn" data-category="mobile">Mobile</button>
+                <button class="filter-btn" data-category="web">Web</button>
+            </div>
+
+            <!-- Blog grid -->
+            <div class="blog-grid">
+                <article class="blog-card" data-category="UI">
+                    <a href="dark-mode-mobile-apps-design-patterns.html" class="blog-card-link">
+                        <!-- SEO note: Compress to WebP for production -->
+                        <div class="blog-thumbnail">
+                            <img src="../images/blogImages/blog-dark-mode-design-patterns.png"
+                                 alt="Dark mode mobile app interface comparison showing contrast ratios and color palette choices"
+                                 width="600"
+                                 height="400"
+                                 loading="lazy">
+                        </div>
+                        <div class="blog-content">
+                            <span class="blog-category">Case Study | UI</span>
+                            <h3>Designing dark-mode dashboards that don't feel heavy</h3>
+                            <p>Why most dark themes fail at contrast, and how we built a system that actually works across mobile and web without compromising readability.</p>
+                            <div class="blog-meta">
+                                <time datetime="2025-01-15">Jan 15, 2025</time>
+                                <span class="read-time">6 min read</span>
+                            </div>
+                        </div>
+                    </a>
+                </article>
+
+                <article class="blog-card" data-category="mobile">
+                    <a href="habit-tracker-app-retention-design.html" class="blog-card-link">
+                        <!-- SEO note: Compress to WebP for production -->
+                        <div class="blog-thumbnail">
+                            <img src="../images/Planner LightMode.png"
+                                 alt="Mobile habit tracker app showing notification strategy and user engagement metrics dashboard"
+                                 width="600"
+                                 height="400"
+                                 loading="lazy">
+                        </div>
+                        <div class="blog-content">
+                            <span class="blog-category">Process | Mobile</span>
+                            <h3>What I learned building a habit tracker that people actually use</h3>
+                            <p>Smart notifications, no guilt trips, and why showing less data led to higher retention. Lessons from shipping Planner to 100K+ users.</p>
+                            <div class="blog-meta">
+                                <time datetime="2025-01-08">Jan 8, 2025</time>
+                                <span class="read-time">8 min read</span>
+                            </div>
+                        </div>
+                    </a>
+                </article>
+
+                <article class="blog-card" data-category="UX">
+                    <a href="react-native-performance-optimization.html" class="blog-card-link">
+                        <!-- SEO note: Compress to WebP for production -->
+                        <div class="blog-thumbnail">
+                            <img src="../images/blogImages/blog-react-native-performance.png"
+                                 alt="React Native performance profiling showing FPS metrics and JavaScript bridge optimization techniques"
+                                 width="600"
+                                 height="400"
+                                 loading="lazy">
+                        </div>
+                        <div class="blog-content">
+                            <span class="blog-category">UX Notes | UX</span>
+                            <h3>The 60fps rule: Why performance is a design problem</h3>
+                            <p>How we optimized a React Native app from 30fps to consistent 60fps by treating animation performance as a core design constraint, not an afterthought.</p>
+                            <div class="blog-meta">
+                                <time datetime="2024-12-20">Dec 20, 2024</time>
+                                <span class="read-time">5 min read</span>
+                            </div>
+                        </div>
+                    </a>
+                </article>
+
+                <article class="blog-card" data-category="web">
+                    <a href="progressive-web-app-architecture.html" class="blog-card-link">
+                        <!-- SEO note: Compress to WebP for production -->
+                        <div class="blog-thumbnail">
+                            <img src="../images/blogImages/blog-pwa-architecture.jpg"
+                                 alt="Progressive web app architecture diagram showing service worker caching strategy and offline functionality"
+                                 width="600"
+                                 height="400"
+                                 loading="lazy">
+                        </div>
+                        <div class="blog-content">
+                            <span class="blog-category">Technical | Web</span>
+                            <h3>Building PWAs that feel native without the overhead</h3>
+                            <p>Service workers, smart caching strategies, and the architecture decisions that let us ship a web app that works offline and installs like native.</p>
+                            <div class="blog-meta">
+                                <time datetime="2024-12-12">Dec 12, 2024</time>
+                                <span class="read-time">10 min read</span>
+                            </div>
+                        </div>
+                    </a>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer loaded via JS -->
+    <script src="../script.js"></script>
+</body>
+</html>

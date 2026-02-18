@@ -3,31 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact - Joshua Mpungu</title>
-    <meta name="description" content="Get in touch with Joshua Mpungu to discuss your next project.">
+    <title>Contact Synvex Labs - Start Your Project | Get in Touch</title>
+    <meta name="description" content="Ready to build your next digital product? Contact Synvex Labs to discuss mobile app development, web applications, or SaaS solutions. We respond within 24 hours.">
+    <meta name="keywords" content="contact digital studio, hire mobile app developer, web development inquiry, project consultation, software development contact">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav>
-        <div class="container">
-            <a href="index.html" class="logo">Joshua Mpungu</a>
-            <ul>
-                <li><a href="index.html" class="nav-link">Home</a></li>
-                <li><a href="projects.html" class="nav-link">Projects</a></li>
-                <li><a href="about.html" class="nav-link">About</a></li>
-                <li><a href="contact.html" class="nav-link active">Contact</a></li>
-            </ul>
-        </div>
-    </nav>
 
+    <!-- Header loaded via JS -->
+    
     <!-- Page Header -->
     <div class="page-header">
-        <h2>Get In Touch</h2>
-        <p class="section-subtitle">Let's talk about your next project.</p>
+        <h1>Get In Touch</h1>
+        <p class="section-subtitle">Let's talk about your next project. Whether you're launching an MVP or scaling to millions of users, we're here to help.</p>
     </div>
 
     <!-- Contact Form -->
@@ -35,42 +26,39 @@
         <form id="contactForm">
             <div class="form-group">
                 <label for="name">Name</label>
-                <input type="text" id="name" name="name" required>
+                <input type="text" id="name" name="name" placeholder="Your name" required aria-label="Your full name">
             </div>
 
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" name="email" placeholder="your@email.com" required aria-label="Your email address">
             </div>
 
             <div class="form-group">
                 <label for="message">Message</label>
-                <textarea id="message" name="message" required></textarea>
+                <textarea id="message" name="message" placeholder="Tell us about your project..." required aria-label="Your message about the project"></textarea>
             </div>
 
             <button type="submit">Send Message</button>
         </form>
 
         <div class="social-links">
-            <a href="https://github.com/ST10484166">GitHub</a>
-            <a href="https://www.linkedin.com/in/joshuampungu-907661349/">LinkedIn</a>
-            <a href="#">Instagram</a>
-            <a href="https://www.behance.net/joshuaMpungu">Behance</a>
+            <a href="https://github.com/ST10484166" target="_blank" rel="noopener noreferrer" aria-label="Visit Synvex Labs on GitHub">GitHub</a>
+            <a href="https://www.linkedin.com/in/joshuampungu-907661349/" target="_blank" rel="noopener noreferrer" aria-label="Connect with Joshua Mpungu on LinkedIn">LinkedIn</a>
+            <a href="https://instagram.com/synvexlabs" target="_blank" rel="noopener noreferrer" aria-label="Follow Synvex Labs on Instagram">Instagram</a>
+            <a href="https://www.behance.net/joshuaMpungu" target="_blank" rel="noopener noreferrer" aria-label="View Synvex Labs portfolio on Behance">Behance</a>
+        </div>
+
+        <!-- Additional contact info -->
+        <div style="margin-top: 4rem; text-align: center; padding: 2rem; background: var(--bg-secondary); border-radius: 16px; border: 1px solid var(--border);">
+            <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">What happens next?</h2>
+            <p style="color: var(--text-muted); line-height: 1.7; margin-bottom: 1.5rem;">After you send your message, we'll review your project requirements and respond within 24 hours. If we're a good fit, we'll schedule a call to discuss scope, timeline, and how we can help bring your vision to life.</p>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">Looking for inspiration? Check out our <a href="projects.html" style="color: var(--accent); text-decoration: none;">portfolio</a> or read about our <a href="about.html" style="color: var(--accent); text-decoration: none;">approach</a>.</p>
         </div>
     </div>
 
-        <!-- Footer -->
-    <footer>
-        <div class="container">
-            <p class="footer">&copy; 2025 Joshua Mpungu. All rights reserved.</p>
-            <p class="footer">Thanks for checking out the page! Connect with me.</p>
-            <ul class="social-links">
-                <li><a href="https://github.com/ST10484166" target="_blank" rel="noopener noreferror">GitHub</a></li>
-                <li><a href="https://www.linkedin.com/in/joshuampungu-907661349/" target="_blank" rel="noopener noreferror">LinkedIn</a></li>
-            </ul>
-        </div>
-    </footer>
-
+        <!-- Footer loaded via JS-->
+    
     <script src="script.js"></script>
 </body>
 </html>

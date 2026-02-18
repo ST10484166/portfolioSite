@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What I Learned Building a Habit Tracker That People Actually Use | Synvex Labs</title>
+    <meta name="description" content="Smart notifications, no guilt trips, and why showing less data led to higher retention. Lessons from shipping Planner to 100K+ users.">
+    <meta name="keywords" content="habit tracker, mobile app, user retention, notification design, UX design, product design">
+
+    <!-- Open Graph for social sharing -->
+    <meta property="og:title" content="What I Learned Building a Habit Tracker That People Actually Use">
+    <meta property="og:description" content="Lessons from shipping Planner to 100K+ users about smart notifications and retention design.">
+    <meta property="og:image" content="../images/Planner LightMode.png">
+    <meta property="og:type" content="article">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon/favicon-16x16.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <!-- Header loaded via JS -->
+
+    <!-- Article -->
+    <article class="blog-post">
+        <header class="article-header fade-in">
+            <div class="container article-container">
+                <span class="blog-category">Process</span>
+                <h1>What I learned building a habit tracker that people actually use</h1>
+                <p class="article-subtitle">Smart notifications, no guilt trips, and why showing less data led to higher retention. Lessons from shipping Planner to 100K+ users.</p>
+
+                <div class="article-meta">
+                    <img src="../images/eggyPfp.jpg" alt="Synvex Labs" class="author-avatar">
+                    <div class="meta-text">
+                        <span class="author-name">Synvex Labs</span>
+                        <div class="meta-details">
+                            <time datetime="2025-01-08">January 8, 2025</time>
+                            <span>•</span>
+                            <span class="read-time">8 min read</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Featured image -->
+        <div class="article-featured-image fade-in">
+            <div class="container">
+                <img src="../images/Planner LightMode.png" alt="Planner habit tracker app interface" loading="lazy">
+            </div>
+        </div>
+
+        <!-- Article content -->
+        <div class="article-content fade-in">
+            <div class="container article-container">
+                <!-- Introduction -->
+                <section class="article-section">
+                    <p class="lead">Most habit tracking apps fail within the first week. Not because the idea is bad, but because they're designed like productivity tools instead of behavior change tools. There's a critical difference.</p>
+
+                    <p>When we built Planner, our goal wasn't to create another streak counter or gamified todo list. We wanted to build something that genuinely helped people build habits—and more importantly, didn't punish them when they missed a day.</p>
+
+                    <p>Two years and 100K+ users later, here's what actually worked.</p>
+                </section>
+
+                <!-- Problem Space -->
+                <section class="article-section">
+                    <h2>Why Most Habit Trackers Fail</h2>
+
+                    <p>We studied dozens of habit tracking apps before building Planner. Almost all of them made the same mistakes:</p>
+
+                    <ul>
+                        <li><strong>Streak anxiety:</strong> Breaking a 30-day streak feels catastrophic, leading users to abandon the app entirely rather than restart</li>
+                        <li><strong>Notification overload:</strong> Generic "Did you exercise today?" reminders that get ignored or disabled within days</li>
+                        <li><strong>Analysis paralysis:</strong> Charts, graphs, and statistics that make users feel like they're failing instead of progressing</li>
+                        <li><strong>All-or-nothing thinking:</strong> No middle ground between "perfect streak" and "complete failure"</li>
+                    </ul>
+
+                    <p>The problem isn't the users—it's that these apps optimize for metrics that feel good to designers (high streaks, perfect completion rates) rather than actual behavior change.</p>
+                </section>
+
+                <!-- Our Approach -->
+                <section class="article-section">
+                    <h2>What We Built Instead</h2>
+
+                    <h3>1. Forgiving Streaks</h3>
+
+                    <p>Instead of resetting to zero when you miss a day, Planner uses a "momentum" system:</p>
+
+                    <ul>
+                        <li>Missing one day doesn't reset your progress—it just pauses it</li>
+                        <li>The app shows "10 of the last 14 days" instead of "streak broken"</li>
+                        <li>Visual feedback emphasizes progress over perfection</li>
+                    </ul>
+
+                    <aside class="callout callout-tip">
+                        <strong>💡 Key Insight:</strong> Habit research shows that missing one day doesn't destroy habit formation, but the emotional response to "breaking a streak" often does. By reframing how we display progress, we removed the psychological barrier to continuing.
+                    </aside>
+
+                    <h3>2. Smart Notification Timing</h3>
+
+                    <p>Generic daily reminders are noise. We built an adaptive notification system:</p>
+
+                    <pre><code class="language-javascript">
+// Simplified notification logic
+function scheduleNotification(habit) {
+    const completionHistory = habit.recentCompletions;
+    const avgCompletionTime = calculateAvgTime(completionHistory);
+
+    // Send reminder 30 mins before typical completion time
+    const notificationTime = avgCompletionTime - (30 * 60 * 1000);
+
+    // Skip notification if user has been consistent for 7+ days
+    if (habit.recentStreak >= 7) {
+        return null; // They've got this
+    }
+
+    return scheduleAt(notificationTime);
+}
+                    </code></pre>
+
+                    <p>The result: notifications that feel helpful rather than naggy, and crucially, notifications that stop when they're no longer needed.</p>
+
+                    <h3>3. Less Data, More Context</h3>
+
+                    <p>We removed most of the analytics. Instead of showing:</p>
+
+                    <ul>
+                        <li>Weekly completion percentage</li>
+                        <li>Trend graphs</li>
+                        <li>Comparison to "average users"</li>
+                    </ul>
+
+                    <p>We show:</p>
+
+                    <ul>
+                        <li>Simple visual calendar with completed days highlighted</li>
+                        <li>One sentence of encouragement or context</li>
+                        <li>"You've exercised 3 times this week" (not "You missed 4 days")</li>
+                    </ul>
+
+                    <aside class="callout">
+                        <strong>⚠️ Counterintuitive:</strong> When we A/B tested removing detailed statistics, 7-day retention improved by 23%. Turns out, showing people too much data about their failures made them quit earlier.
+                    </aside>
+                </section>
+
+                <!-- Implementation Details -->
+                <section class="article-section">
+                    <h2>Technical Decisions That Mattered</h2>
+
+                    <h3>Local-First Architecture</h3>
+
+                    <p>Habit data is deeply personal. We built Planner with a local-first architecture:</p>
+
+                    <ul>
+                        <li>All data stored on-device by default</li>
+                        <li>Optional cloud sync for backup (encrypted)</li>
+                        <li>Zero latency for logging habits</li>
+                        <li>Works completely offline</li>
+                    </ul>
+
+                    <p>This wasn't just about privacy—it's about reliability. When logging a habit needs to wait for a network request, it adds friction to the exact moment we need to minimize friction.</p>
+
+                    <h3>Thoughtful Defaults</h3>
+
+                    <p>We spent weeks getting the onboarding flow right. Key decisions:</p>
+
+                    <ol>
+                        <li>Limit users to 3 habits maximum during first week (reduced overwhelm by 40%)</li>
+                        <li>Pre-populate with realistic habit examples (not "wake up at 5am" type goals)</li>
+                        <li>Suggest habit stacking opportunities during setup</li>
+                        <li>Default to daily habits but make frequency adjustment obvious</li>
+                    </ol>
+                </section>
+
+                <!-- Results -->
+                <section class="article-section">
+                    <h2>What Actually Moved the Needle</h2>
+
+                    <p>After two years and multiple iterations, here are the metrics that matter:</p>
+
+                    <ul>
+                        <li><strong>7-day retention: 61%</strong> (industry average for habit apps is ~25%)</li>
+                        <li><strong>30-day retention: 38%</strong> (industry average is ~10%)</li>
+                        <li><strong>Average habits tracked: 2.8</strong> (down from 5.2 in early versions—less is more)</li>
+                        <li><strong>Notification disable rate: 12%</strong> (most apps see 60%+ within first week)</li>
+                    </ul>
+
+                    <p>But the most meaningful metric isn't in our analytics—it's in the reviews. People consistently mention that Planner is the first habit tracker they've stuck with long-term.</p>
+                </section>
+
+                <!-- Lessons Learned -->
+                <section class="article-section">
+                    <h2>Key Lessons</h2>
+
+                    <p>If you're building tools for behavior change:</p>
+
+                    <ol>
+                        <li><strong>Design for imperfection:</strong> Assume users will miss days. Make getting back on track feel natural, not like starting over.</li>
+                        <li><strong>Question every notification:</strong> If you can't articulate why this specific notification will be helpful to this specific user at this specific time, don't send it.</li>
+                        <li><strong>Show less data:</strong> More analytics doesn't equal more insight. Often it just creates more ways to feel inadequate.</li>
+                        <li><strong>Optimize for the long game:</strong> 90% completion after 3 months beats 100% completion for 1 week.</li>
+                        <li><strong>Minimize friction obsessively:</strong> Every tap, every screen, every second of delay is an opportunity for users to quit. Ruthlessly eliminate all of it.</li>
+                    </ol>
+
+                    <p>Building behavior change tools is fundamentally different from building productivity tools. Productivity tools can push users to do more. Behavior change tools need to make doing the thing feel inevitable, easy, and forgiving.</p>
+                </section>
+
+                <!-- Tags -->
+                <div class="article-tags">
+                    <span class="tag">#HabitTracking</span>
+                    <span class="tag">#ProductDesign</span>
+                    <span class="tag">#BehaviorChange</span>
+                    <span class="tag">#MobileApp</span>
+                    <span class="tag">#UserRetention</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related posts (loaded dynamically from related-articles.html) -->
+        <div id="related-articles"></div>
+
+        <!-- CTA -->
+        <section class="article-cta fade-in">
+            <div class="container">
+                <h2>Ready to build something amazing?</h2>
+                <p>Let's discuss how we can help bring your product vision to life with thoughtful design and solid engineering.</p>
+                <a href="../contact.html" class="cta-button primary-large">Get Started</a>
+            </div>
+        </section>
+    </article>
+
+    <!-- Footer loaded via JS -->
+    <script src="../script.js"></script>
+</body>
+</html>
