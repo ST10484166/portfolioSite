@@ -23,6 +23,8 @@
 
     <!-- Contact Form -->
     <div class="contact-container fade-in">
+        <div id="formMessage" class="form-message"></div>
+
         <form id="contactForm">
             <div class="form-group">
                 <label for="name">Name</label>
@@ -39,7 +41,12 @@
                 <textarea id="message" name="message" placeholder="Tell us about your project..." required aria-label="Your message about the project"></textarea>
             </div>
 
-            <button type="submit">Send Message</button>
+            <div class="consent-group">
+                <input type="checkbox" id="consent" name="consent" required aria-label="Consent to receive a response to contact request">
+                <label for="consent">I consent to receive a response to my contact request</label>
+            </div>
+
+            <button type="submit" id="submitBtn">Send Message</button>
         </form>
 
         <div class="social-links">

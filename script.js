@@ -37,23 +37,73 @@ gridItems.forEach(item => {
     });
 });
 
-// Form submission
+// Form submission with Formspree integration
 const contactForm = document.getElementById('contactForm');
 if (contactForm) {
-    contactForm.addEventListener('submit', (e) => {
+    contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
+        // Check consent
+        const consent = document.getElementById('consent').checked;
+        if (!consent) {
+            showMessage('Please check the consent box before sending.', 'error');
+            return;
+        }
+
         // Get form values
         const name = document.getElementById('name').value;
         const email = document.getElementById('email').value;
         const message = document.getElementById('message').value;
-        
-        // In production, this would send to your backend
-        // For demo purposes, we'll just show a success message
-        alert(`Thank you ${name}! We've received your message and will respond to ${email}.`);
-        
-        contactForm.reset();
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Disable button during submission
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+
+        try {
+            // Send to Formspree
+            const response = await fetch('https://formspree.io/f/mbdakgvb', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: name,
+                    email: email,
+                    message: message,
+                    _replyto: email
+                })
+            });
+
+            if (response.ok) {
+                // Success
+                showMessage(`Thank you! We've received your message and will respond to ${email} shortly.`, 'success');
+                contactForm.reset();
+            } else {
+                // Server error
+                showMessage('Failed to send message. Please try again.', 'error');
+            }
+        } catch (error) {
+            // Network error
+            showMessage('Network error. Please check your connection and try again.', 'error');
+        }
+
+        // Re-enable button
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Message';
     });
+}
+
+// Show/hide form messages
+function showMessage(text, type) {
+    const messageEl = document.getElementById('formMessage');
+    messageEl.textContent = text;
+    messageEl.className = `form-message ${type} show`;
+
+    // Auto-hide after 10 seconds
+    setTimeout(() => {
+        messageEl.classList.remove('show');
+    }, 10000);
 }
 
 // Load header and footer, then set active navigation
